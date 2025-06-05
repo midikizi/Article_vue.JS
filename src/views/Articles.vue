@@ -91,6 +91,9 @@ const newArticle = ref({
 const fetchArticles = async () => {
   try {
     const response = await fetch('/api/articles')
+    if (!response.ok) {
+      throw new Error('Failed to fetch articles')
+    }
     articles.value = await response.json()
   } catch (error) {
     console.error('Error fetching articles:', error)
@@ -108,11 +111,13 @@ const createArticle = async () => {
       body: JSON.stringify(newArticle.value)
     })
     
-    if (response.ok) {
-      showCreateForm.value = false
-      newArticle.value = { title: '', content: '', image: '' }
-      await fetchArticles()
+    if (!response.ok) {
+      throw new Error('Failed to create article')
     }
+    
+    showCreateForm.value = false
+    newArticle.value = { title: '', content: '', image: '' }
+    await fetchArticles()
   } catch (error) {
     console.error('Error creating article:', error)
   }

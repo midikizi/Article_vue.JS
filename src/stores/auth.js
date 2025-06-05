@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { supabase } from '../lib/supabase'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -9,15 +8,23 @@ export const useAuthStore = defineStore('auth', {
   }),
   
   actions: {
-    async login(email, password) {
+    async login(username, password) {
       try {
         this.loading = true
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
+        const response = await fetch('/api/users/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
         })
-        if (error) throw error
-        this.user = data.user
+        
+        if (!response.ok) {
+          throw new Error('Login failed')
+        }
+
+        const data = await response.json()
+        this.user = data
       } catch (error) {
         this.error = error.message
       } finally {
@@ -25,20 +32,23 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async register(email, password, username) {
+    async register(email, password, username, bio) {
       try {
         this.loading = true
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username
-            }
-          }
+        const response = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password, username, bio })
         })
-        if (error) throw error
-        this.user = data.user
+
+        if (!response.ok) {
+          throw new Error('Registration failed')
+        }
+
+        const data = await response.json()
+        this.user = data
       } catch (error) {
         this.error = error.message
       } finally {
@@ -47,13 +57,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout() {
-      try {
-        const { error } = await supabase.auth.signOut()
-        if (error) throw error
-        this.user = null
-      } catch (error) {
-        this.error = error.message
-      }
+      this.user = null
     }
   }
 })

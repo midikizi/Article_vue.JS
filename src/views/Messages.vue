@@ -104,6 +104,9 @@ const newMessage = ref({
 const fetchMessages = async () => {
   try {
     const response = await fetch('/api/messages')
+    if (!response.ok) {
+      throw new Error('Failed to fetch messages')
+    }
     messages.value = await response.json()
   } catch (error) {
     console.error('Error fetching messages:', error)
@@ -121,11 +124,13 @@ const sendMessage = async () => {
       body: JSON.stringify(newMessage.value)
     })
     
-    if (response.ok) {
-      showCreateForm.value = false
-      newMessage.value = { title: '', content: '', attachment: '' }
-      await fetchMessages()
+    if (!response.ok) {
+      throw new Error('Failed to send message')
     }
+    
+    showCreateForm.value = false
+    newMessage.value = { title: '', content: '', attachment: '' }
+    await fetchMessages()
   } catch (error) {
     console.error('Error sending message:', error)
   }
@@ -142,9 +147,11 @@ const editMessage = async (message) => {
       body: JSON.stringify(message)
     })
     
-    if (response.ok) {
-      await fetchMessages()
+    if (!response.ok) {
+      throw new Error('Failed to edit message')
     }
+    
+    await fetchMessages()
   } catch (error) {
     console.error('Error editing message:', error)
   }
